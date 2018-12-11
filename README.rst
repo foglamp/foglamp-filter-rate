@@ -44,8 +44,8 @@ Trigger clear expression: X < 0.2
 
 Pre-trigger time (mS): 1000
 
-The trigger exprssions use the same expression mechanism as the
-foglamp-south-expression and foglamp-fitler-expression plugins
+The trigger expression uses the same expression mechanism as the
+foglamp-south-expression and foglamp-filter-expression plugins
 
 Expression may contain any of the following...
 
@@ -62,6 +62,9 @@ Expression may contain any of the following...
 The plugin uses the C++ Mathematical Expression Toolkit Library
 by Arash Partow and is used under the MIT licence granted on that toolkit.
 
+Note this plugin is designed to work with streams with a single asset
+in the stream, there is no mechanism in the expression syntax to support
+multiple asset names.
 
 Example Configuration
 ---------------------
