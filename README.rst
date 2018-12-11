@@ -38,9 +38,9 @@ second before the acceleration hit this peak the configuration might be:
 
 Nominal Data Rate: 1, data rate unit "per second"
 
-Trigger set expression: acceleration.X > 1.5
+Trigger set expression: X > 1.5
 
-Trigger clear expression: acceleration.X < 0.2
+Trigger clear expression: X < 0.2
 
 Pre-trigger time (mS): 1000
 
@@ -62,6 +62,70 @@ Expression may contain any of the following...
 The plugin uses the C++ Mathematical Expression Toolkit Library
 by Arash Partow and is used under the MIT licence granted on that toolkit.
 
+
+Example Configuration
+---------------------
+
+The following is an example configuration.
+
+.. code-block:: console
+
+  {
+    "untrigger": {
+      "description": "Expression to trigger end of full rate collection",
+      "type": "string",
+      "order": "2",
+      "value": "Vibration < 1",
+      "default": ""
+    },
+    "rate": {
+      "description": "The reduced rate at which data must be sent",
+      "type": "integer",
+      "order": "4",
+      "value": "1",
+      "default": "0"
+    },
+    "rateUnit": {
+      "description": "The unit used to evaluate the reduced rate",
+      "order": "5",
+      "type": "enumeration",
+      "options": [
+        "per second",
+        "per minute",
+        "per hour",
+        "per day"
+      ],
+      "value": "per second",
+      "default": "per second"
+    },
+    "plugin": {
+      "description": "Expression filter plugin",
+      "type": "string",
+      "default": "rate",
+      "value": "rate",
+      "readonly": "true"
+    },
+    "enable": {
+      "description": "A switch that can be used to enable or disable execution of the rate filter.",
+      "type": "boolean",
+      "default": "false",
+      "value": "true"
+    },
+    "trigger": {
+      "description": "Expression to trigger full rate collection",
+      "type": "string",
+      "order": "1",
+      "value": "Vibration > 1",
+      "default": ""
+    },
+    "preTrigger": {
+      "description": "The amount of data to send prior to the trigger firing, expressed in milliseconds",
+      "type": "integer",
+      "order": "3",
+      "value": "0",
+      "default": "1"
+    }
+  }
 
 Build
 -----
