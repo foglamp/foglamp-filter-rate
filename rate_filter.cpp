@@ -360,6 +360,16 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 	return m_expression.value() != 0.0;
 }
 
+/**
+ * Handle a reconfiguration request
+ *
+ * @param newConfig	The new configuration
+ */
+void RateFilter::reconfigure(const string& newConfig)
+{
+	setConfig(newConfig);
+	handleConfig(m_config);
+}
 
 
 /**

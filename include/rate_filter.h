@@ -56,6 +56,7 @@ class RateFilter : public FogLampFilter {
 				m_pretrigger = pretrigger;
 			}
 		void	ingest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
+		void	reconfigure(const std::string& newConfig);
 	private:
 		void	triggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
 		void	untriggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
