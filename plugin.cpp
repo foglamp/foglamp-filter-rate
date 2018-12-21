@@ -25,7 +25,7 @@
 			 "\"enable\": {\"description\": \"A switch that can be used to enable or disable execution of " \
 					 "the rate filter.\", " \
 				"\"type\": \"boolean\", " \
-				"\"displayName\": \"Enable\", " \
+				"\"displayName\": \"Enabled\", " \
 				"\"default\": \"false\" }, " \
 			 "\"trigger\": {\"description\": \"Expression to trigger full rate collection\", " \
 				"\"type\": \"string\", " \
