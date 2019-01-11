@@ -17,6 +17,7 @@
 #include <list>
 #include <vector>
 #include <exprtk.hpp>
+#include <mutex>
 
 #define MAX_EXPRESSION_VARIABLES 20
 
@@ -86,6 +87,8 @@ class RateFilter : public FogLampFilter {
 		int			m_pretrigger;
 		std::list<Reading *>	m_buffer;
 		bool			m_state;
+		bool			m_pendingReconfigure;
+		std::mutex		m_configMutex;
 		Evaluator		*m_triggerExpression;
 		Evaluator		*m_untriggerExpression;
 		int			m_averageCount;

@@ -51,7 +51,18 @@ RateFilter::~RateFilter()
  */
 void RateFilter::ingest(vector<Reading *> *readings, vector<Reading *>& out)
 {
-	// Use the first reading to creare the evaluators if we do not alreadu have them
+	lock_guard<mutex> guard(m_configMutex);
+	if (m_pendingReconfigure)
+	{
+		if (m_triggerExpression)
+			delete m_triggerExpression;
+		if (m_untriggerExpression)
+			delete m_untriggerExpression;
+		m_triggerExpression = 0;
+		m_untriggerExpression = 0;
+		m_pendingReconfigure = false;
+	}
+	// Use the first reading to create the evaluators if we do not already have them
 	if (m_triggerExpression == 0)
 	{
 		Reading *firstReading = readings->front();
@@ -251,7 +262,7 @@ void RateFilter::addDataPoint(const string& name, double value)
 }
 
 /**
- * Create a average reading usign the asset name and times from the reading
+ * Create a average reading using the asset name and times from the reading
  * passed in and the data accumulated in the average map
  *
  * @param reading	The reading to take the asset name and times from
@@ -367,8 +378,10 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
  */
 void RateFilter::reconfigure(const string& newConfig)
 {
+	lock_guard<mutex> guard(m_configMutex);
 	setConfig(newConfig);
 	handleConfig(m_config);
+	m_pendingReconfigure = true;
 }
 
 
