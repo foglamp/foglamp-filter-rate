@@ -67,6 +67,12 @@ static PLUGIN_INFORMATION info = {
 	DEFAULT_CONFIG	          // Default plugin configuration
 };
 
+typedef struct
+{
+	RateFilter	*handle;
+	std::string	configCatName;
+} FILTER_INFO;
+
 /**
  * Return the information about this plugin
  */
@@ -89,12 +95,14 @@ PLUGIN_HANDLE plugin_init(ConfigCategory *config,
 			  OUTPUT_HANDLE *outHandle,
 			  OUTPUT_STREAM output)
 {
-	RateFilter *handle = new RateFilter(FILTER_NAME,
-						  *config,
-						  outHandle,
-						  output);
+	FILTER_INFO *info = new FILTER_INFO;
+	info->handle = new RateFilter(FILTER_NAME,
+					*config,
+					outHandle,
+					output);
+	info->configCatName = config->getName();
 	
-	return (PLUGIN_HANDLE)handle;
+	return (PLUGIN_HANDLE)info;
 }
 
 /**
@@ -106,7 +114,8 @@ PLUGIN_HANDLE plugin_init(ConfigCategory *config,
 void plugin_ingest(PLUGIN_HANDLE *handle,
 		   READINGSET *readingSet)
 {
-	RateFilter *filter = (RateFilter *)handle;
+	FILTER_INFO *info = (FILTER_INFO *) handle;
+	RateFilter *filter = info->handle;
 	if (!filter->isEnabled())
 	{
 		/*
@@ -128,6 +137,13 @@ void plugin_ingest(PLUGIN_HANDLE *handle,
 	 */
 	vector<Reading *> out;
 	filter->ingest(((ReadingSet *)readingSet)->getAllReadingsPtr(), out);
+	const vector<Reading *>& readings = ((ReadingSet *)readingSet)->getAllReadings();
+	for (vector<Reading *>::const_iterator elem = readings.begin();
+						      elem != readings.end();
+						      ++elem)
+	{
+		AssetTracker::getAssetTracker()->addAssetTrackingTuple(info->configCatName, (*elem)->getAssetName(), string("Filter"));
+	}
 	delete (ReadingSet *)readingSet;
 
 	/*
@@ -136,6 +152,13 @@ void plugin_ingest(PLUGIN_HANDLE *handle,
 	 * actual readings.
 	 */
 	ReadingSet *newReadingSet = new ReadingSet(&out);
+	const vector<Reading *>& readings2 = newReadingSet->getAllReadings();
+	for (vector<Reading *>::const_iterator elem = readings2.begin();
+						      elem != readings2.end();
+						      ++elem)
+	{
+		AssetTracker::getAssetTracker()->addAssetTrackingTuple(info->configCatName, (*elem)->getAssetName(), string("Filter"));
+	}
 	filter->m_func(filter->m_data, newReadingSet);
 }
 
@@ -147,7 +170,8 @@ void plugin_ingest(PLUGIN_HANDLE *handle,
  */
 void plugin_reconfigure(PLUGIN_HANDLE *handle, const string& newConfig)
 {
-	RateFilter *filter = (RateFilter *)handle;
+	FILTER_INFO *info = (FILTER_INFO *) handle;
+	RateFilter *filter = info->handle;
 	filter->reconfigure(newConfig);
 }
 
@@ -156,8 +180,9 @@ void plugin_reconfigure(PLUGIN_HANDLE *handle, const string& newConfig)
  */
 void plugin_shutdown(PLUGIN_HANDLE *handle)
 {
-	RateFilter *filter = (RateFilter *)handle;
-	delete filter;
+	FILTER_INFO *info = (FILTER_INFO *) handle;
+	delete info->handle;
+	delete info;
 }
 
 };
