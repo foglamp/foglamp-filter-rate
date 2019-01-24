@@ -17,6 +17,7 @@
 #include <iostream>
 #include <filter_plugin.h>
 #include <rate_filter.h>
+#include <version.h>
 
 #define FILTER_NAME "rate"
 #define DEFAULT_CONFIG "{\"plugin\" : { \"description\" : \"Variable readings collection rate filter\", " \
@@ -60,7 +61,7 @@ extern "C" {
  */
 static PLUGIN_INFORMATION info = {
         FILTER_NAME,              // Name
-        "1.0.0",                  // Version
+        VERSION,                  // Version
         0,                        // Flags
         PLUGIN_TYPE_FILTER,       // Type
         "1.0.0",                  // Interface version
