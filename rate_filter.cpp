@@ -142,7 +142,10 @@ int	offset = 0;	// Offset within the vector
 			return triggeredIngest(readings, out);
 		}
 		bufferPretrigger(*reading);
-		addAverageReading(*reading, out);
+		if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
+		{
+			addAverageReading(*reading, out);
+		}
 		delete *reading;
 		offset++;
 	}
