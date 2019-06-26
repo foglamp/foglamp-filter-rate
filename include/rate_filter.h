@@ -19,7 +19,7 @@
 #include <exprtk.hpp>
 #include <mutex>
 
-#define MAX_EXPRESSION_VARIABLES 20
+#define MAX_EXPRESSION_VARIABLES 40
 
 /**
  * A FogLAMP filter that allows variable rates of data to be sent.

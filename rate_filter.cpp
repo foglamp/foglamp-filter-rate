@@ -394,6 +394,7 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 				dpvalue.getType() == DatapointValue::T_FLOAT)
 		{
 			m_variableNames[m_varCount++] = (*it)->getName();
+			m_variableNames[m_varCount++] = reading->getAssetName() + "." + (*it)->getName();
 		}
 		if (m_varCount == MAX_EXPRESSION_VARIABLES)
 		{
@@ -434,12 +435,16 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 			value = dpvalue.toDouble();
 		}
 		
+		string fullname = reading->getAssetName() + "." + name;
 		for (int i = 0; i < m_varCount; i++)
 		{
 			if (m_variableNames[i].compare(name) == 0)
 			{
 				m_variables[i] = value;
-				break;
+			}
+			if (m_variableNames[i].compare(fullname) == 0)
+			{
+				m_variables[i] = value;
 			}
 		}
 	}
@@ -499,7 +504,7 @@ void RateFilter::handleConfig(const ConfigCategory& config)
 		m_rate.tv_sec = (24 * 60 * 60) / rate;
 		m_rate.tv_usec = 0;
 	}
-	string m_pretriggerFilter = config.getValue("pretiggerFilter");
+	string m_pretriggerFilter = config.getValue("pretriggerFilter");
 	string exclusions = config.getValue("exclusions");
 	rapidjson::Document doc;
 	doc.Parse(exclusions.c_str());
