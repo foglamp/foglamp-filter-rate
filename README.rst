@@ -29,6 +29,8 @@ The configuration items for the filter are:
 
   - An optional pre-trigger time expressed in milliseconds
 
+  - A set of asset names that are excluded frpmthe rate limit processing and always sent at full rate
+
 For example if the filter is working with a SensorTag and it reads the tag
 data at 10ms intervals but we only wish to send 1 second averages under
 normal circumstances. However if the X axis acceleration exceed 1.5g

@@ -132,21 +132,28 @@ int	offset = 0;	// Offset within the vector
 						      reading != readings->end();
 						      ++reading)
 	{
-		if (m_triggerExpression->evaluate(*reading))
+		if (isExcluded((*reading)->getAssetName()))
 		{
-			m_state = true;
-			clearAverage();
-			// Remove the readings we have dealt with
-			readings->erase(readings->begin(), readings->begin() + offset);
-			sendPretrigger(out);
-			return triggeredIngest(readings, out);
+			out.push_back(*reading);
 		}
-		bufferPretrigger(*reading);
-		if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
+		else
 		{
-			addAverageReading(*reading, out);
+			if (m_triggerExpression->evaluate(*reading))
+			{
+				m_state = true;
+				clearAverage();
+				// Remove the readings we have dealt with
+				readings->erase(readings->begin(), readings->begin() + offset);
+				sendPretrigger(out);
+				return triggeredIngest(readings, out);
+			}
+			bufferPretrigger(*reading);
+			if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
+			{
+				addAverageReading(*reading, out);
+			}
+			delete *reading;
 		}
-		delete *reading;
 		offset++;
 	}
 	readings->clear();
@@ -427,4 +434,54 @@ void RateFilter::handleConfig(const ConfigCategory& config)
 		m_rate.tv_sec = (24 * 60 * 60) / rate;
 		m_rate.tv_usec = 0;
 	}
+	string exclusions = config.getValue("exclusions");
+	rapidjson::Document doc;
+	doc.Parse(exclusions.c_str());
+	if (!doc.HasParseError())
+	{
+		if (doc.HasMember("exclusions") && doc["exclusions"].IsArray())
+		{
+			const rapidjson::Value& values = doc["exclusions"];
+			for (rapidjson::Value::ConstValueIterator itr = values.Begin();
+                                                itr != values.End(); ++itr)
+                        {
+				if (itr->IsString())
+				{
+					m_exclusions.push_back(itr->GetString());
+				}
+				else
+				{
+					Logger::getLogger()->error("The exclusions element should be an array of strings");
+				}
+			}
+
+		}
+		else
+		{
+			Logger::getLogger()->error("The exclusions element should be an array of strings");
+		}
+	}
+	else
+	{
+		Logger::getLogger()->error("Error parsing the exlcusions element. The exclusions element should be an array of strings");
+	}
+}
+
+
+/**
+ * Check if the asset name is in the exclusions list
+ *
+ * @param name	The asset name to check
+ * @return true if the asset is exempt from the rate limiting
+ */
+bool RateFilter::isExcluded(const string& asset)
+{
+	for (auto it = m_exclusions.cbegin(); it != m_exclusions.cend(); ++it)
+	{
+		if (asset.compare(*it) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
 }

@@ -68,6 +68,7 @@ class RateFilter : public FogLampFilter {
 		Reading *averageReading(Reading *);
 		void	clearAverage();
 		void 	handleConfig(const ConfigCategory& conf);
+		bool	isExcluded(const std::string& asset);
 		class Evaluator {
 			public:
 				Evaluator(Reading *, const std::string& expression);
@@ -94,6 +95,8 @@ class RateFilter : public FogLampFilter {
 		int			m_averageCount;
 		std::map<std::string, double>
 					m_averageMap;
+		std::vector<std::string>
+					m_exclusions;
 };
 
 
