@@ -62,6 +62,7 @@ class RateFilter : public FogLampFilter {
 		void	triggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
 		void	untriggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
 		void	sendPretrigger(std::vector<Reading *>& out);
+		void	sendPretrigger(std::vector<Reading *>& out, Reading *trigger);
 		void	bufferPretrigger(Reading *);
 		void	addAverageReading(Reading *, std::vector<Reading *>& out);
 		void	addDataPoint(const std::string&, double);
@@ -97,6 +98,7 @@ class RateFilter : public FogLampFilter {
 					m_averageMap;
 		std::vector<std::string>
 					m_exclusions;
+		std::string		m_pretriggerFilter;
 };
 
 

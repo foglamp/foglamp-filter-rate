@@ -29,6 +29,10 @@ The configuration items for the filter are:
 
   - An optional pre-trigger time expressed in milliseconds
 
+  - The pretrigger buffer may also be filtered such that only those readings in it whch have the same value as the reading that triggered the sending of the buffer will be sent. Setting the pretriggerFilter to a datapoint name will enable that datapoint for fitlering.
+
+  - The pretrigger buffer may also be filtered such that only those readings in it whch have the same value as the reading that triggered the sending of the buffer will be sent
+
   - A set of asset names that are excluded frpmthe rate limit processing and always sent at full rate
 
 For example if the filter is working with a SensorTag and it reads the tag
