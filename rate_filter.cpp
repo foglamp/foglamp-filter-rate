@@ -132,21 +132,21 @@ int	offset = 0;	// Offset within the vector
 						      reading != readings->end();
 						      ++reading)
 	{
+		if (m_triggerExpression->evaluate(*reading))
+		{
+			m_state = true;
+			clearAverage();
+			// Remove the readings we have dealt with
+			readings->erase(readings->begin(), readings->begin() + offset);
+			sendPretrigger(out, *reading);
+			return triggeredIngest(readings, out);
+		}
 		if (isExcluded((*reading)->getAssetName()))
 		{
 			out.push_back(*reading);
 		}
 		else
 		{
-			if (m_triggerExpression->evaluate(*reading))
-			{
-				m_state = true;
-				clearAverage();
-				// Remove the readings we have dealt with
-				readings->erase(readings->begin(), readings->begin() + offset);
-				sendPretrigger(out, *reading);
-				return triggeredIngest(readings, out);
-			}
 			bufferPretrigger(*reading);
 			if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
 			{
@@ -407,9 +407,11 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 	{
 		m_symbolTable.add_variable(m_variableNames[i], m_variables[i]);
 	}
+	m_expressionStr = expression;
 	m_symbolTable.add_constants();
 	m_expression.register_symbol_table(m_symbolTable);
 	m_parser.compile(expression.c_str(), m_expression);
+	m_assets.push_back(new string(reading->getAssetName()));
 }
 
 /**
@@ -420,6 +422,45 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
  */
 bool RateFilter::Evaluator::evaluate(Reading *reading)
 {
+	// Check first to see if we have seen this reading asset before
+	bool newAsset = true;
+	string asset = reading->getAssetName();
+	for (auto it = m_assets.cbegin(); it != m_assets.cend(); ++it)
+	{
+		if ((*it)->compare(asset) == 0)
+		{
+			newAsset = false;
+			break;
+		}
+	}
+	if (newAsset)	// Need to add variables for this asset
+	{
+		vector<Datapoint *>	datapoints = reading->getReadingData();
+		for (auto it = datapoints.begin(); it != datapoints.end(); it++)
+		{
+			DatapointValue& dpvalue = (*it)->getData();
+			if (dpvalue.getType() == DatapointValue::T_INTEGER ||
+					dpvalue.getType() == DatapointValue::T_FLOAT)
+			{
+				m_variableNames[m_varCount++] = reading->getAssetName() + "." + (*it)->getName();
+			}
+			if (m_varCount == MAX_EXPRESSION_VARIABLES)
+			{
+				Logger::getLogger()->error("Too many datapoints in reading");
+				break;
+			}
+		}
+
+		for (int i = 0; i < m_varCount; i++)
+		{
+			m_symbolTable.add_variable(m_variableNames[i], m_variables[i]);
+		}
+		m_symbolTable.add_constants();
+		m_expression.register_symbol_table(m_symbolTable);
+		m_parser.compile(m_expressionStr.c_str(), m_expression);
+		m_assets.push_back(new string(asset));
+	}
+
 	vector<Datapoint *> datapoints = reading->getReadingData();
 	for (auto it = datapoints.begin(); it != datapoints.end(); it++)
 	{
@@ -442,7 +483,7 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 			{
 				m_variables[i] = value;
 			}
-			if (m_variableNames[i].compare(fullname) == 0)
+			else if (m_variableNames[i].compare(fullname) == 0)
 			{
 				m_variables[i] = value;
 			}

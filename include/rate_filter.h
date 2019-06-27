@@ -81,6 +81,8 @@ class RateFilter : public FogLampFilter {
 				double				m_variables[MAX_EXPRESSION_VARIABLES];
 				std::string			m_variableNames[MAX_EXPRESSION_VARIABLES];
 				int				m_varCount;
+				std::string			m_expressionStr;
+				std::vector<std::string *>	m_assets;
 		};
 		std::string		m_trigger;
 		std::string		m_untrigger;
