@@ -100,7 +100,6 @@ class RateFilter : public FogLampFilter {
 					m_averageMap;
 		std::vector<std::string>
 					m_exclusions;
-		std::string		m_pretriggerFilter;
 };
 
 

@@ -80,13 +80,6 @@ const char *default_config = QUOTE({
 			"displayName" : "Exclusions",
 			"order" : "6",
 			"default" : "{ \"exclusions\" : [] }"
-			},
-		"pretriggerFilter" : {
-			"description" : "A datapoint to match the pretrigger buffer against",
-			"type" : "string",
-			"displayName" : "Pretrigger Filter",
-			"order" : "7",
-			"default" : ""
 			}
 	});
 

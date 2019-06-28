@@ -138,7 +138,7 @@ int	offset = 0;	// Offset within the vector
 			clearAverage();
 			// Remove the readings we have dealt with
 			readings->erase(readings->begin(), readings->begin() + offset);
-			sendPretrigger(out, *reading);
+			sendPretrigger(out);
 			return triggeredIngest(readings, out);
 		}
 		if (isExcluded((*reading)->getAssetName()))
@@ -217,70 +217,6 @@ void RateFilter::sendPretrigger(vector<Reading *>& out)
 	}
 }
 
-/**
- * Send the pretigger buffer data, filtering the given data point in the reading that
- * triggered the sending of the buffer.
- *
- * @param out	The output buffer
- * @param reading	The readign that caused the pretrigger to be send
- */
-void RateFilter::sendPretrigger(vector<Reading *>& out, Reading *reading)
-{
-DatapointValue	*match = NULL;
-
-	if (m_pretriggerFilter.compare(""))
-	{
-		vector<Datapoint *> dps = reading->getReadingData();
-		for (auto it = dps.cbegin(); it != dps.end(); ++it)
-		{
-			if ((*it)->getName().compare(m_pretriggerFilter) == 0)
-			{
-				match = &((*it)->getData());
-			}
-		}
-	}
-	while (!m_buffer.empty())
-	{
-		Reading *r = m_buffer.front();
-		if (match == NULL)
-		{
-			out.push_back(r);
-		}
-		else
-		{
-			bool addReading = false;
-			vector<Datapoint *> dps = r->getReadingData();
-			for (auto it = dps.cbegin(); addReading == false && it != dps.end(); ++it)
-			{
-				if ((*it)->getName().compare(m_pretriggerFilter) == 0)
-				{
-					DatapointValue dp  = ((*it)->getData());
-					if (dp.getType() == match->getType())
-					{
-						switch (dp.getType())
-						{
-							case DatapointValue::T_INTEGER:
-								addReading = (dp.toInt() == match->toInt());
-								break;
-							case DatapointValue::T_FLOAT:
-								addReading = (dp.toDouble() == match->toDouble());
-								break;
-						}
-					}
-				}
-			}
-			if (addReading)
-			{
-				out.push_back(r);
-			}
-			else
-			{
-				delete r;
-			}
-		}
-		m_buffer.pop_front();
-	}
-}
 
 /**
  * Add a reading to the average data. If the period has enxpired in which
@@ -545,7 +481,6 @@ void RateFilter::handleConfig(const ConfigCategory& config)
 		m_rate.tv_sec = (24 * 60 * 60) / rate;
 		m_rate.tv_usec = 0;
 	}
-	string m_pretriggerFilter = config.getValue("pretriggerFilter");
 	string exclusions = config.getValue("exclusions");
 	rapidjson::Document doc;
 	doc.Parse(exclusions.c_str());
