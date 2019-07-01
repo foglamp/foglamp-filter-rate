@@ -19,7 +19,7 @@
 #include <exprtk.hpp>
 #include <mutex>
 
-#define MAX_EXPRESSION_VARIABLES 20
+#define MAX_EXPRESSION_VARIABLES 40
 
 /**
  * A FogLAMP filter that allows variable rates of data to be sent.
@@ -62,12 +62,14 @@ class RateFilter : public FogLampFilter {
 		void	triggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
 		void	untriggeredIngest(std::vector<Reading *> *readings, std::vector<Reading *>& out);
 		void	sendPretrigger(std::vector<Reading *>& out);
+		void	sendPretrigger(std::vector<Reading *>& out, Reading *trigger);
 		void	bufferPretrigger(Reading *);
 		void	addAverageReading(Reading *, std::vector<Reading *>& out);
 		void	addDataPoint(const std::string&, double);
 		Reading *averageReading(Reading *);
 		void	clearAverage();
 		void 	handleConfig(const ConfigCategory& conf);
+		bool	isExcluded(const std::string& asset);
 		class Evaluator {
 			public:
 				Evaluator(Reading *, const std::string& expression);
@@ -79,6 +81,8 @@ class RateFilter : public FogLampFilter {
 				double				m_variables[MAX_EXPRESSION_VARIABLES];
 				std::string			m_variableNames[MAX_EXPRESSION_VARIABLES];
 				int				m_varCount;
+				std::string			m_expressionStr;
+				std::vector<std::string *>	m_assets;
 		};
 		std::string		m_trigger;
 		std::string		m_untrigger;
@@ -94,6 +98,8 @@ class RateFilter : public FogLampFilter {
 		int			m_averageCount;
 		std::map<std::string, double>
 					m_averageMap;
+		std::vector<std::string>
+					m_exclusions;
 };
 
 

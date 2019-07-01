@@ -141,12 +141,19 @@ int	offset = 0;	// Offset within the vector
 			sendPretrigger(out);
 			return triggeredIngest(readings, out);
 		}
-		bufferPretrigger(*reading);
-		if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
+		if (isExcluded((*reading)->getAssetName()))
 		{
-			addAverageReading(*reading, out);
+			out.push_back(*reading);
 		}
-		delete *reading;
+		else
+		{
+			bufferPretrigger(*reading);
+			if (m_rate.tv_sec != 0 || m_rate.tv_usec != 0)
+			{
+				addAverageReading(*reading, out);
+			}
+			delete *reading;
+		}
 		offset++;
 	}
 	readings->clear();
@@ -209,6 +216,7 @@ void RateFilter::sendPretrigger(vector<Reading *>& out)
 		m_buffer.pop_front();
 	}
 }
+
 
 /**
  * Add a reading to the average data. If the period has enxpired in which
@@ -322,6 +330,7 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 				dpvalue.getType() == DatapointValue::T_FLOAT)
 		{
 			m_variableNames[m_varCount++] = (*it)->getName();
+			m_variableNames[m_varCount++] = reading->getAssetName() + "." + (*it)->getName();
 		}
 		if (m_varCount == MAX_EXPRESSION_VARIABLES)
 		{
@@ -334,9 +343,11 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 	{
 		m_symbolTable.add_variable(m_variableNames[i], m_variables[i]);
 	}
+	m_expressionStr = expression;
 	m_symbolTable.add_constants();
 	m_expression.register_symbol_table(m_symbolTable);
 	m_parser.compile(expression.c_str(), m_expression);
+	m_assets.push_back(new string(reading->getAssetName()));
 }
 
 /**
@@ -347,6 +358,45 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
  */
 bool RateFilter::Evaluator::evaluate(Reading *reading)
 {
+	// Check first to see if we have seen this reading asset before
+	bool newAsset = true;
+	string asset = reading->getAssetName();
+	for (auto it = m_assets.cbegin(); it != m_assets.cend(); ++it)
+	{
+		if ((*it)->compare(asset) == 0)
+		{
+			newAsset = false;
+			break;
+		}
+	}
+	if (newAsset)	// Need to add variables for this asset
+	{
+		vector<Datapoint *>	datapoints = reading->getReadingData();
+		for (auto it = datapoints.begin(); it != datapoints.end(); it++)
+		{
+			DatapointValue& dpvalue = (*it)->getData();
+			if (dpvalue.getType() == DatapointValue::T_INTEGER ||
+					dpvalue.getType() == DatapointValue::T_FLOAT)
+			{
+				m_variableNames[m_varCount++] = reading->getAssetName() + "." + (*it)->getName();
+			}
+			if (m_varCount == MAX_EXPRESSION_VARIABLES)
+			{
+				Logger::getLogger()->error("Too many datapoints in reading");
+				break;
+			}
+		}
+
+		for (int i = 0; i < m_varCount; i++)
+		{
+			m_symbolTable.add_variable(m_variableNames[i], m_variables[i]);
+		}
+		m_symbolTable.add_constants();
+		m_expression.register_symbol_table(m_symbolTable);
+		m_parser.compile(m_expressionStr.c_str(), m_expression);
+		m_assets.push_back(new string(asset));
+	}
+
 	vector<Datapoint *> datapoints = reading->getReadingData();
 	for (auto it = datapoints.begin(); it != datapoints.end(); it++)
 	{
@@ -362,12 +412,16 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 			value = dpvalue.toDouble();
 		}
 		
+		string fullname = reading->getAssetName() + "." + name;
 		for (int i = 0; i < m_varCount; i++)
 		{
 			if (m_variableNames[i].compare(name) == 0)
 			{
 				m_variables[i] = value;
-				break;
+			}
+			else if (m_variableNames[i].compare(fullname) == 0)
+			{
+				m_variables[i] = value;
 			}
 		}
 	}
@@ -427,4 +481,54 @@ void RateFilter::handleConfig(const ConfigCategory& config)
 		m_rate.tv_sec = (24 * 60 * 60) / rate;
 		m_rate.tv_usec = 0;
 	}
+	string exclusions = config.getValue("exclusions");
+	rapidjson::Document doc;
+	doc.Parse(exclusions.c_str());
+	if (!doc.HasParseError())
+	{
+		if (doc.HasMember("exclusions") && doc["exclusions"].IsArray())
+		{
+			const rapidjson::Value& values = doc["exclusions"];
+			for (rapidjson::Value::ConstValueIterator itr = values.Begin();
+                                                itr != values.End(); ++itr)
+                        {
+				if (itr->IsString())
+				{
+					m_exclusions.push_back(itr->GetString());
+				}
+				else
+				{
+					Logger::getLogger()->error("The exclusions element should be an array of strings");
+				}
+			}
+
+		}
+		else
+		{
+			Logger::getLogger()->error("The exclusions element should be an array of strings");
+		}
+	}
+	else
+	{
+		Logger::getLogger()->error("Error parsing the exlcusions element. The exclusions element should be an array of strings");
+	}
+}
+
+
+/**
+ * Check if the asset name is in the exclusions list
+ *
+ * @param name	The asset name to check
+ * @return true if the asset is exempt from the rate limiting
+ */
+bool RateFilter::isExcluded(const string& asset)
+{
+	for (auto it = m_exclusions.cbegin(); it != m_exclusions.cend(); ++it)
+	{
+		if (asset.compare(*it) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
 }
