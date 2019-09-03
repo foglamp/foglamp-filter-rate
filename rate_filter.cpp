@@ -346,7 +346,10 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 	m_expressionStr = expression;
 	m_symbolTable.add_constants();
 	m_expression.register_symbol_table(m_symbolTable);
-	m_parser.compile(expression.c_str(), m_expression);
+	if (!m_parser.compile(expression.c_str(), m_expression))
+	{
+		Logger::getLogger()->error("Expression compilation failed: %s", m_parser.error().c_str());
+	}
 	m_assets.push_back(new string(reading->getAssetName()));
 }
 
@@ -393,7 +396,10 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 		}
 		m_symbolTable.add_constants();
 		m_expression.register_symbol_table(m_symbolTable);
-		m_parser.compile(m_expressionStr.c_str(), m_expression);
+		if (!m_parser.compile(m_expressionStr.c_str(), m_expression))
+		{
+			Logger::getLogger()->error("Expression compilation failed: %s", m_parser.error().c_str());
+		}
 		m_assets.push_back(new string(asset));
 	}
 
