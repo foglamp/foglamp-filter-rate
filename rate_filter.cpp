@@ -1,5 +1,5 @@
 /*
- * FogLAMP "rate" filter plugin.
+ * Fledge "rate" filter plugin.
  *
  * Copyright (c) 2018 Dianomic Systems
  *
@@ -25,7 +25,7 @@ RateFilter::RateFilter(const std::string& filterName,
 			       ConfigCategory& filterConfig,
                                OUTPUT_HANDLE *outHandle,
                                OUTPUT_STREAM out) :
-                                  FogLampFilter(filterName, filterConfig,
+                                  FledgeFilter(filterName, filterConfig,
                                                 outHandle, out),
 				  m_state(false), m_pretrigger(0), m_averageCount(0),
 				  m_triggerExpression(0), m_untriggerExpression(0)

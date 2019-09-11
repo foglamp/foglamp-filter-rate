@@ -1,7 +1,7 @@
 #ifndef _RATE_FILTER_H
 #define _RATE_FILTER_H
 /*
- * FogLAMP "rate" filter plugin.
+ * Fledge "rate" filter plugin.
  *
  * Copyright (c) 2018 Dianomic Systems
  *
@@ -22,7 +22,7 @@
 #define MAX_EXPRESSION_VARIABLES 40
 
 /**
- * A FogLAMP filter that allows variable rates of data to be sent.
+ * A Fledge filter that allows variable rates of data to be sent.
  * It uses trigger expressions to triggr the sending of full rate
  * readings. When the filter is not triggered it averages readings
  * at a rate defined in the cnfiguration and sends averages for
@@ -37,7 +37,7 @@
  * asset per stream. It should be enhanced to support multiple
  * assets.
  */
-class RateFilter : public FogLampFilter {
+class RateFilter : public FledgeFilter {
 	public:
 		RateFilter(const std::string& filterName,
                         ConfigCategory& filterConfig,
