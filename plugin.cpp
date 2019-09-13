@@ -19,35 +19,65 @@
 #include <rate_filter.h>
 #include <version.h>
 
+
 #define FILTER_NAME "rate"
-#define DEFAULT_CONFIG "{\"plugin\" : { \"description\" : \"Variable readings collection rate filter\", " \
-                       		"\"type\" : \"string\", " \
-				"\"default\" : \"" FILTER_NAME "\",\"readonly\" : \"true\" }, " \
-			 "\"enable\": {\"description\": \"A switch that can be used to enable or disable execution of " \
-					 "the rate filter.\", " \
-				"\"type\": \"boolean\", " \
-				"\"displayName\": \"Enabled\", " \
-				"\"default\": \"false\" }, " \
-			 "\"trigger\": {\"description\": \"Expression to trigger full rate collection\", " \
-				"\"type\": \"string\", " \
-				"\"default\": \"\", \"order\" : \"1\", \"displayName\" : \"Trigger expression\" }, " \
-			 "\"untrigger\": {\"description\": \"Expression to trigger end of full rate collection\", " \
-				"\"type\": \"string\", " \
-				"\"default\": \"\", \"order\" : \"2\", \"displayName\" : \"End Expression\" }, " \
-			 "\"preTrigger\": {\"description\": \"The amount of data to send prior to the trigger firing, expressed in milliseconds\", " \
-				"\"type\": \"integer\", " \
-				"\"default\": \"1\", \"order\" : \"3\", " \
-				"\"displayName\" : \"Pre-trigger time (mS)\" }, " \
-			 "\"rate\": {\"description\": \"The reduced rate at which data must be sent\", " \
-				"\"type\": \"integer\", " \
-				"\"default\": \"0\", \"order\" : \"4\", " \
-				"\"displayName\" : \"Reduced collection rate\" }, " \
-			 "\"rateUnit\": {\"description\": \"The unit used to evaluate the reduced rate\", " \
-				"\"type\": \"enumeration\", " \
-				"\"options\" : [ \"per second\", \"per minute\", \"per hour\", \"per day\" ], " \
-				"\"default\": \"per second\", \"order\" : \"5\", " \
-				"\"displayName\" : \"Rate Units\" } " \
-			"}"
+const char *default_config = QUOTE({
+		"plugin" : {
+			"description" : "Variable readings collection rate filter",
+			"type" : "string", 
+			"default" : FILTER_NAME,
+			"readonly" : "true"
+		       	},
+		"enable": {
+			"description": "A switch that can be used to enable or disable execution of the rate filter.",
+			"type": "boolean",
+			"displayName": "Enabled",
+			"default": "false"
+			},
+		"trigger": {
+			"description": "Expression to trigger full rate collection",
+			"type": "string",
+			"default": "",
+		       	"order" : "1",
+		       	"displayName" : "Trigger expression"
+		       	},
+		"untrigger": {
+			"description": "Expression to trigger end of full rate collection",
+			"type": "string",
+			"default": "",
+		       	"order" : "2",
+			"displayName" : "End Expression"
+			},
+		"preTrigger": {
+			"description": "The amount of data to send prior to the trigger firing, expressed in milliseconds",
+			"type": "integer",
+			"default": "1",
+			"order" : "3",
+			"displayName" : "Pre-trigger time (mS)"
+			},
+		"rate": {
+			"description": "The reduced rate at which data must be sent",
+			"type": "integer",
+			"default": "0",
+			"order" : "4",
+			"displayName" : "Reduced collection rate"
+			},
+		"rateUnit": {
+			"description": "The unit used to evaluate the reduced rate",
+			"type": "enumeration",
+			"options" : [ "per second", "per minute", "per hour", "per day" ],
+			"default": "per second",
+			"order" : "5",
+			"displayName" : "Rate Units"
+	       		},
+		"exclusions" : {
+			"description" : "A set of assets to always send at full data rate",
+			"type" : "JSON",
+			"displayName" : "Exclusions",
+			"order" : "6",
+			"default" : "{ \"exclusions\" : [] }"
+			}
+	});
 
 using namespace std;
 
@@ -65,7 +95,7 @@ static PLUGIN_INFORMATION info = {
         0,                        // Flags
         PLUGIN_TYPE_FILTER,       // Type
         "1.0.0",                  // Interface version
-	DEFAULT_CONFIG	          // Default plugin configuration
+	default_config	          // Default plugin configuration
 };
 
 typedef struct
