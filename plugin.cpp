@@ -41,25 +41,42 @@ const char *default_config = QUOTE({
 		       	"order" : "1",
 		       	"displayName" : "Trigger expression"
 		       	},
+		"condition": {
+			"description": "Terminate full rate forwardign based on",
+			"type": "enumeration",
+			"options" : [ "Expression", "Time" ],
+			"default": "Expression",
+		       	"order" : "2",
+		       	"displayName" : "Terminate on"
+		       	},
 		"untrigger": {
 			"description": "Expression to trigger end of full rate collection",
 			"type": "string",
 			"default": "",
-		       	"order" : "2",
-			"displayName" : "End Expression"
+		       	"order" : "3",
+			"displayName" : "End Expression",
+			"validity" : "condition == \"Expression\""
+			},
+		"time" : {
+			"description": "Time to send full rate data after triggering, expressed in milliseconds",
+			"type": "integer",
+			"default": "0",
+			"order" : "4",
+			"displayName" : "Full rate time (mS)",
+			"validity" : "condition == \"Time\""
 			},
 		"preTrigger": {
 			"description": "The amount of data to send prior to the trigger firing, expressed in milliseconds",
 			"type": "integer",
 			"default": "1",
-			"order" : "3",
+			"order" : "5",
 			"displayName" : "Pre-trigger time (mS)"
 			},
 		"rate": {
 			"description": "The reduced rate at which data must be sent",
 			"type": "integer",
 			"default": "0",
-			"order" : "4",
+			"order" : "6",
 			"displayName" : "Reduced collection rate"
 			},
 		"rateUnit": {
@@ -67,14 +84,14 @@ const char *default_config = QUOTE({
 			"type": "enumeration",
 			"options" : [ "per second", "per minute", "per hour", "per day" ],
 			"default": "per second",
-			"order" : "5",
+			"order" : "7",
 			"displayName" : "Rate Units"
 	       		},
 		"exclusions" : {
 			"description" : "A set of assets to always send at full data rate",
 			"type" : "JSON",
 			"displayName" : "Exclusions",
-			"order" : "6",
+			"order" : "8",
 			"default" : "{ \"exclusions\" : [] }"
 			}
 	});

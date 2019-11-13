@@ -90,6 +90,9 @@ class RateFilter : public FogLampFilter {
 		struct timeval		m_rate;
 		struct timeval		m_lastSent;
 		int			m_pretrigger;
+		struct timeval		m_fullTime;
+		struct timeval		m_windowClose;
+		bool			m_timeWindow;
 		std::list<Reading *>	m_buffer;
 		bool			m_state;
 		bool			m_pendingReconfigure;
