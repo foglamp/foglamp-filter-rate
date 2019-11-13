@@ -83,6 +83,7 @@ class RateFilter : public FogLampFilter {
 				int				m_varCount;
 				std::string			m_expressionStr;
 				std::vector<std::string *>	m_assets;
+				bool				m_compiled;
 		};
 		std::string		m_trigger;
 		std::string		m_untrigger;
