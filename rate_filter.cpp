@@ -13,6 +13,7 @@
 #include <logger.h>
 #include <exprtk.hpp>
 #include <rate_filter.h>
+#include <sys/time.h>
 
 using namespace std;
 using namespace rapidjson;
@@ -28,7 +29,8 @@ RateFilter::RateFilter(const std::string& filterName,
                                   FogLampFilter(filterName, filterConfig,
                                                 outHandle, out),
 				  m_state(false), m_pretrigger(0), m_averageCount(0),
-				  m_triggerExpression(0), m_untriggerExpression(0)
+				  m_triggerExpression(0), m_untriggerExpression(0),
+				  m_timeWindow(false)
 {
 	m_lastSent.tv_sec = 0;
 	m_lastSent.tv_usec = 0;
@@ -103,7 +105,19 @@ int	offset = 0;	// Offset within the vector
 						      reading != readings->end();
 						      ++reading)
 	{
-		if (m_untriggerExpression->evaluate(*reading))
+		if (m_timeWindow)
+		{
+			struct timeval tm;
+			(*reading)->getUserTimestamp(&tm);
+			if (timercmp(&tm, &m_windowClose, >))
+			{
+				m_state = false;
+				// Remove the readings we have dealt with
+				readings->erase(readings->begin(), readings->begin() + offset);
+				return untriggeredIngest(readings, out);
+			}
+		}
+		else if (m_untriggerExpression->evaluate(*reading))
 		{
 			m_state = false;
 			// Remove the readings we have dealt with
@@ -139,6 +153,9 @@ int	offset = 0;	// Offset within the vector
 			// Remove the readings we have dealt with
 			readings->erase(readings->begin(), readings->begin() + offset);
 			sendPretrigger(out);
+			struct timeval tm;
+			(*reading)->getUserTimestamp(&tm);
+			timeradd(&tm, &m_fullTime, &m_windowClose);
 			return triggeredIngest(readings, out);
 		}
 		if (isExcluded((*reading)->getAssetName()))
@@ -459,6 +476,18 @@ void RateFilter::handleConfig(const ConfigCategory& config)
 	setTrigger(config.getValue("trigger"));
 	setUntrigger(config.getValue("untrigger"));
 	m_pretrigger = strtol(config.getValue("preTrigger").c_str(), NULL, 10);
+	string condition = config.getValue("condition");
+	if (condition.compare("Expression") == 0)
+	{
+		m_timeWindow = false;
+	}
+	else if (condition.compare("Time") == 0)
+	{
+		m_timeWindow = true;
+	}
+	long windowMs = strtol(config.getValue("time").c_str(), NULL, 10);
+	m_fullTime.tv_sec = windowMs / 1000;
+	m_fullTime.tv_usec = (windowMs % 1000) * 1000;
 
 	int rate = strtol(config.getValue("rate").c_str(), NULL, 10);
 	string unit = config.getValue("rateUnit");

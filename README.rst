@@ -25,7 +25,11 @@ The configuration items for the filter are:
 
   - An expression to set the trigger for full rate data
 
+  - The mechanism to stop full rate forwarding, this may be another expression or a time window
+
   - An expression to clear the trigger for full rate data, if left blank this will simply be the trigger filter evaluating to false
+
+  - The time window, in milliseconds to forward data at the full rate
 
   - An optional pre-trigger time expressed in milliseconds
 
