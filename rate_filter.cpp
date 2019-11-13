@@ -337,7 +337,7 @@ void RateFilter::clearAverage()
  * @param reading	An initial reading to use to create varaibles
  * @parsm expression	The expression to evaluate
  */
-RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m_varCount(0)
+RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m_varCount(0), m_compiled(false)
 {
 	vector<Datapoint *>	datapoints = reading->getReadingData();
 	for (auto it = datapoints.begin(); it != datapoints.end(); it++)
@@ -363,9 +363,11 @@ RateFilter::Evaluator::Evaluator(Reading *reading, const string& expression) : m
 	m_expressionStr = expression;
 	m_symbolTable.add_constants();
 	m_expression.register_symbol_table(m_symbolTable);
+	m_compiled = true;
 	if (!m_parser.compile(expression.c_str(), m_expression))
 	{
 		Logger::getLogger()->error("Expression compilation failed: %s", m_parser.error().c_str());
+		m_compiled = false;
 	}
 	m_assets.push_back(new string(reading->getAssetName()));
 }
@@ -416,6 +418,11 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 		if (!m_parser.compile(m_expressionStr.c_str(), m_expression))
 		{
 			Logger::getLogger()->error("Expression compilation failed: %s", m_parser.error().c_str());
+			m_compiled = false;
+		}
+		else
+		{
+			m_compiled = true;
 		}
 		m_assets.push_back(new string(asset));
 	}
@@ -448,7 +455,14 @@ bool RateFilter::Evaluator::evaluate(Reading *reading)
 			}
 		}
 	}
-	return m_expression.value() != 0.0;
+	if (m_compiled)
+	{
+		return m_expression.value() != 0.0;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 /**
