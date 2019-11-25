@@ -83,12 +83,16 @@ class RateFilter : public FledgeFilter {
 				int				m_varCount;
 				std::string			m_expressionStr;
 				std::vector<std::string *>	m_assets;
+				bool				m_compiled;
 		};
 		std::string		m_trigger;
 		std::string		m_untrigger;
 		struct timeval		m_rate;
 		struct timeval		m_lastSent;
 		int			m_pretrigger;
+		struct timeval		m_fullTime;
+		struct timeval		m_windowClose;
+		bool			m_timeWindow;
 		std::list<Reading *>	m_buffer;
 		bool			m_state;
 		bool			m_pendingReconfigure;
